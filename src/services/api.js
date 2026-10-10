@@ -2,9 +2,6 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 api.interceptors.request.use(
@@ -15,11 +12,18 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Let Axios set the correct Content-Type automatically.
+    // JSON requests receive application/json.
+    // FormData requests receive multipart/form-data with a boundary.
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    } else if (config.data !== undefined && config.data !== null) {
+      config.headers["Content-Type"] = "application/json";
+    }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
